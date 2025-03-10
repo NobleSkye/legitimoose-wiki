@@ -25,12 +25,16 @@ jobs:
           DATE=$(date -u "+%Y-%m-%d")
           
           mkdir -p pages
-          echo "---" > pages/$SLUG.md
-          echo "title: $TITLE" >> pages/$SLUG.md
-          echo "author: $AUTHOR" >> pages/$SLUG.md
-          echo "date: $DATE" >> pages/$SLUG.md
-          echo "---" >> pages/$SLUG.md
-          echo "$BODY" >> pages/$SLUG.md
+          FILE_PATH="pages/$SLUG.md"
+          echo "---" > $FILE_PATH
+          echo "title: $TITLE" >> $FILE_PATH
+          echo "author: $AUTHOR" >> $FILE_PATH
+          echo "date: $DATE" >> $FILE_PATH
+          echo "---" >> $FILE_PATH
+          echo "$BODY" >> $FILE_PATH
+
+          echo "Created file: $FILE_PATH"
+          cat $FILE_PATH
 
       - name: Update Homepage
         run: |
@@ -42,19 +46,20 @@ jobs:
           echo "## Random Page" >> pages/index.md
           echo "[Surprise me!](./pages/$RANDOM_PAGE.md)" >> pages/index.md
 
+      - name: Debug File Creation
+        run: |
+          echo "Checking contents of pages directory:"
+          ls -l pages
 
-        - name: Commit Changes
+      - name: Commit Changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
           git add pages/
           git commit -m "Added/Updated page: $TITLE and updated homepage" || echo "No changes to commit"
-          git push origin main
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        
-        
-
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git main
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
