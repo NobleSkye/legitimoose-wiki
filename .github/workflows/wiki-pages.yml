@@ -1,68 +1,57 @@
-name: Convert Issues to Wiki Pages
+name: Create Wiki Pages from Issues
 
 on:
   issues:
     types: [opened, edited]
 
 jobs:
-  build:
+  create-wiki-page:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v3
+      - name: Checkout repository
+        uses: actions/checkout@v2
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v3
-        with:
-          node-version: 16
-
-      - name: Generate Markdown from Issue
-        run: |
-          TITLE="${{ github.event.issue.title }}"
-          SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
-          AUTHOR="${{ github.event.issue.user.login }}"
-          BODY="${{ github.event.issue.body }}"
-          DATE=$(date -u "+%Y-%m-%d")
-          
-          mkdir -p pages
-          FILE_PATH="pages/$SLUG.md"
-          echo "---" > $FILE_PATH
-          echo "title: $TITLE" >> $FILE_PATH
-          echo "author: $AUTHOR" >> $FILE_PATH
-          echo "date: $DATE" >> $FILE_PATH
-          echo "---" >> $FILE_PATH
-          echo "$BODY" >> $FILE_PATH
-
-          echo "Created file: $FILE_PATH"
-          cat $FILE_PATH
-
-      - name: Update Homepage
-        run: |
-          LATEST_PAGE=$(ls -t pages | head -n1 | sed 's/.md//')
-          RANDOM_PAGE=$(ls pages | shuf -n1 | sed 's/.md//')
-          echo "# Legitimoose Wiki" > pages/index.md
-          echo "## Latest Page" >> pages/index.md
-          echo "[Read the latest: $LATEST_PAGE](./pages/$LATEST_PAGE.md)" >> pages/index.md
-          echo "## Random Page" >> pages/index.md
-          echo "[Surprise me!](./pages/$RANDOM_PAGE.md)" >> pages/index.md
-
-      - name: Debug File Creation
-        run: |
-          echo "Checking contents of pages directory:"
-          ls -l pages
-
-      - name: Commit Changes
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Git configuration
         run: |
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          git add pages/
-          git commit -m "Added/Updated page: $TITLE and updated homepage" || echo "No changes to commit"
-          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git main
 
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./pages
+      - name: Get issue details
+        id: issue_details
+        run: |
+          echo "TITLE=${{ github.event.issue.title }}" >> $GITHUB_ENV
+          echo "BODY=${{ github.event.issue.body }}" >> $GITHUB_ENV
+          echo "AUTHOR=${{ github.event.issue.user.login }}" >> $GITHUB_ENV
+          echo "DATE=$(date +"%Y-%m-%d")" >> $GITHUB_ENV
+
+      - name: Generate markdown content
+        run: |
+          SLUG="${{ env.TITLE }}-${{ env.DATE }}"
+          PAGE_PATH="pages/$SLUG.md"
+          
+          echo "# ${{ env.TITLE }}" > $PAGE_PATH
+          echo "### Author: ${{ env.AUTHOR }}" >> $PAGE_PATH
+          echo "### Date: ${{ env.DATE }}" >> $PAGE_PATH
+          echo "## About" >> $PAGE_PATH
+          echo "${{ env.BODY }}" >> $PAGE_PATH
+          echo "## Examples" >> $PAGE_PATH
+          echo "Here are some examples of how to use this page:" >> $PAGE_PATH
+          echo "```" >> $PAGE_PATH
+          echo "Example 1: ..." >> $PAGE_PATH
+          echo "Example 2: ..." >> $PAGE_PATH
+          echo "```" >> $PAGE_PATH
+
+      - name: Commit and push changes
+        run: |
+          git add pages/
+          git commit -m "Added page: ${{ env.TITLE }}-${{ env.DATE }} and updated homepage" || echo "No changes to commit"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
+
+      - name: Update homepage with new page link
+        run: |
+          HOMEPAGE="pages/index.md"
+          echo "### New page added: [${{ env.TITLE }}]($SLUG.md)" > $HOMEPAGE
+          git add $HOMEPAGE
+          git commit -m "Updated homepage with latest page" || echo "No changes to commit"
+          git push https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git main
