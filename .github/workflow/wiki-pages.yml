@@ -1,0 +1,57 @@
+name: Convert Issues to Wiki Pages
+
+on:
+  issues:
+    types: [opened, edited]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 16
+
+      - name: Generate Markdown from Issue
+        run: |
+          TITLE="${{ github.event.issue.title }}"
+          SLUG=$(echo "$TITLE" | tr '[:upper:]' '[:lower:]' | tr ' ' '-')
+          AUTHOR="${{ github.event.issue.user.login }}"
+          BODY="${{ github.event.issue.body }}"
+          DATE=$(date -u "+%Y-%m-%d")
+          
+          mkdir -p pages
+          echo "---" > pages/$SLUG.md
+          echo "title: $TITLE" >> pages/$SLUG.md
+          echo "author: $AUTHOR" >> pages/$SLUG.md
+          echo "date: $DATE" >> pages/$SLUG.md
+          echo "---" >> pages/$SLUG.md
+          echo "$BODY" >> pages/$SLUG.md
+
+      - name: Update Homepage
+        run: |
+          LATEST_PAGE=$(ls -t pages | head -n1 | sed 's/.md//')
+          RANDOM_PAGE=$(ls pages | shuf -n1 | sed 's/.md//')
+          echo "# Legitimoose Wiki" > pages/index.md
+          echo "## Latest Page" >> pages/index.md
+          echo "[Read the latest: $LATEST_PAGE](./pages/$LATEST_PAGE.md)" >> pages/index.md
+          echo "## Random Page" >> pages/index.md
+          echo "[Surprise me!](./pages/$RANDOM_PAGE.md)" >> pages/index.md
+
+      - name: Commit Changes
+        run: |
+          git config --global user.name 'GitHub Actions'
+          git config --global user.email 'actions@github.com'
+          git add pages/
+          git commit -m "Added/Updated page: $TITLE and updated homepage" || echo "No changes to commit"
+          git push
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./pages
