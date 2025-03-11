@@ -1,0 +1,38 @@
+---
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="generator" content={Astro.generator} />
+    <title>Legitimoose Wiki</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Montserrat:wght@600;700&display=swap" rel="stylesheet">
+    <meta name="description" content="Your community-driven knowledge base for all things Legitimoose" />
+  </head>
+  <body class="min-h-screen bg-white">
+    <slot />
+  </body>
+</html>
+
+<style is:global>
+  :root {
+    --moose-primary: #4A2C1C;
+    --moose-secondary: #8B5E3C;
+    --moose-accent: #D4A373;
+    --moose-light: #F5E6D3;
+    --moose-dark: #2C1810;
+  }
+  
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: white;
+    scroll-behavior: smooth;
+  }
+
+  ::selection {
+    background-color: var(--moose-accent);
+    color: white;
+  }
+</style>

@@ -1,0 +1,103 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SearchBar from '../components/SearchBar.astro';
+import Navigation from '../components/Navigation.astro';
+import FeaturedCard from '../components/FeaturedCard.astro';
+import { getCollection } from 'astro:content';
+
+// Get all wiki pages
+const allPages = await getCollection('wiki');
+
+// Get recently edited page (random selection)
+const recentlyEdited = allPages
+  .sort((a, b) => b.data.updatedAt.getTime() - a.data.updatedAt.getTime())
+  .slice(0, 5)[Math.floor(Math.random() * 5)];
+
+// Get newest page from last 7 days
+const sevenDaysAgo = new Date();
+sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+const newPage = allPages.find(page => 
+  page.data.createdAt > sevenDaysAgo
+);
+
+// Get about page
+const aboutPage = allPages.find(page => page.slug === 'about');
+---
+
+<Layout>
+  <div class="min-h-screen bg-white">
+    <!-- Header -->
+    <header class="bg-moose-primary">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex justify-between items-center">
+          <div class="flex items-center">
+            <img src="/logo.svg" alt="Legitimoose Wiki" class="h-12 w-auto" />
+            <h1 class="ml-4 text-3xl font-display font-bold text-white">Wiki</h1>
+          </div>
+          
+          <SearchBar />
+          <Navigation />
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <!-- Hero Section -->
+      <div class="text-center mb-16">
+        <h2 class="text-4xl font-display font-bold text-moose-dark mb-4">
+          Welcome to the Legitimoose Wiki
+        </h2>
+        <p class="text-lg text-moose-secondary max-w-2xl mx-auto">
+          Your community-driven knowledge base for all things Legitimoose.
+          Learn, contribute, and be part of our growing community.
+        </p>
+        <a
+          href="/contribute"
+          class="inline-block mt-8 px-8 py-3 bg-moose-accent text-white font-semibold rounded-lg hover:bg-moose-secondary transition-colors duration-200"
+        >
+          Start Contributing
+        </a>
+      </div>
+
+      <!-- Featured Content Grid -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        {recentlyEdited && (
+          <FeaturedCard
+            type="recent"
+            title={recentlyEdited.data.title}
+            slug={recentlyEdited.slug}
+            date={recentlyEdited.data.updatedAt}
+          />
+        )}
+
+        {newPage && (
+          <FeaturedCard
+            type="new"
+            title={newPage.data.title}
+            slug={newPage.slug}
+            date={newPage.data.createdAt}
+          />
+        )}
+
+        {aboutPage && (
+          <FeaturedCard
+            type="about"
+            title={aboutPage.data.title}
+            slug={aboutPage.slug}
+            description={aboutPage.data.description}
+          />
+        )}
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-moose-light">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="text-center text-moose-secondary">
+          <p>&copy; {new Date().getFullYear()} Legitimoose Wiki. All rights reserved.</p>
+          <p class="mt-2 text-sm">Made with ❤️ by NobleSkye</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+</Layout>

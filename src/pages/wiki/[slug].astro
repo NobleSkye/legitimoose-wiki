@@ -1,0 +1,45 @@
+---
+import Layout from '../../layouts/Layout.astro';
+import { getCollection } from 'astro:content';
+
+export async function getStaticPaths() {
+  const wikiEntries = await getCollection('wiki');
+  return wikiEntries.map(entry => ({
+    params: { slug: entry.slug },
+    props: { entry },
+  }));
+}
+
+const { entry } = Astro.props;
+const { Content } = await entry.render();
+---
+
+<Layout>
+  <div class="min-h-screen bg-white">
+    <header class="bg-moose-primary">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+        <div class="flex justify-between items-center">
+          <a href="/" class="flex items-center">
+            <img src="/logo.svg" alt="Legitimoose Wiki" class="h-12 w-auto" />
+            <h1 class="ml-4 text-3xl font-display font-bold text-white">Wiki</h1>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <main class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <article class="prose prose-lg max-w-none">
+        <Content />
+      </article>
+    </main>
+
+    <footer class="bg-moose-light mt-auto">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div class="text-center text-moose-secondary">
+          <p>&copy; {new Date().getFullYear()} Legitimoose Wiki. All rights reserved.</p>
+          <p class="mt-2 text-sm">Made with ❤️ by NobleSkye</p>
+        </div>
+      </div>
+    </footer>
+  </div>
+</Layout>

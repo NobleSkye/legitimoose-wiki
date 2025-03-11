@@ -1,0 +1,37 @@
+---
+import { formatDistanceToNow } from 'date-fns';
+
+interface Props {
+  type: 'recent' | 'new' | 'about';
+  title: string;
+  slug: string;
+  date?: Date;
+  description?: string;
+}
+
+const { type, title, slug, date, description } = Astro.props;
+
+const labels = {
+  recent: 'Recently Updated',
+  new: 'New Addition',
+  about: 'About'
+};
+---
+<div class="bg-white rounded-lg shadow-lg overflow-hidden border border-moose-light hover:shadow-xl transition-shadow duration-200">
+  <div class="p-6">
+    <div class="text-sm text-moose-secondary mb-2">{labels[type]}</div>
+    <h3 class="text-xl font-bold text-moose-dark mb-2">
+      <a href={`/wiki/${slug}`} class="hover:text-moose-secondary transition-colors duration-200">
+        {title}
+      </a>
+    </h3>
+    {date && (
+      <p class="text-sm text-gray-600 mb-4">
+        {type === 'recent' ? 'Last updated' : 'Created'} {formatDistanceToNow(date)} ago
+      </p>
+    )}
+    {description && (
+      <p class="text-sm text-gray-600">{description}</p>
+    )}
+  </div>
+</div>

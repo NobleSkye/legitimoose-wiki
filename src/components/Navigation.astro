@@ -1,0 +1,17 @@
+---
+const links = [
+  { href: '/wiki', label: 'Browse' },
+  { href: '/categories', label: 'Categories' },
+  { href: '/recent', label: 'Recent Changes' }
+];
+---
+<nav class="hidden md:flex space-x-6 text-white/90">
+  {links.map(link => (
+    <a 
+      href={link.href} 
+      class="hover:text-white transition-colors duration-200"
+    >
+      {link.label}
+    </a>
+  ))}
+</nav>
